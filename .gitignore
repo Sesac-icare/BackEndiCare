@@ -1,0 +1,31 @@
+# 1️ Python 관련 파일
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.so
+
+# 2️ Django 관련 파일
+db.sqlite3
+*.sqlite3
+media/
+staticfiles/
+
+# 3️ 환경 변수 파일 (보안)
+.env
+*.env
+
+# 4️ VSCode, PyCharm 등 IDE 설정 파일
+.vscode/
+.idea/
+*.sublime-workspace
+
+# 5️ macOS, Windows, Linux 시스템 파일
+.DS_Store
+Thumbs.db
+*.swp
+
+# 6️ Virtual Environment (가상 환경)
+venv/
+env/
+myvenv/

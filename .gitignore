@@ -1,15 +1,31 @@
 # 1️ Python 관련 파일
-*.pyc
-*.pyo
-*.pyd
 __pycache__/
+*.py[cod]
+*$py.class
 *.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
 # 2️ Django 관련 파일
+*.log
+local_settings.py
 db.sqlite3
-*.sqlite3
+db.sqlite3-journal
 media/
-staticfiles/
 
 # 3️ 환경 변수 파일 (보안)
 .env
@@ -24,8 +40,14 @@ staticfiles/
 .DS_Store
 Thumbs.db
 *.swp
+*.swo
 
 # 6️ Virtual Environment (가상 환경)
 venv/
 env/
-myvenv/
+ENV/
+
+# 기타
+*.bak
+*.tmp
+*.temp

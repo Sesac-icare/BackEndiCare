@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "users",
     "drf_yasg",
     "chat",
+    "registerPrescription",
 ]
 
 MIDDLEWARE = [

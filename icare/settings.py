@@ -54,11 +54,13 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "corsheaders",
-    "users",
     "drf_yasg",
-    "chat",
-    "registerPrescription",
-    "children",
+    "apps.users",
+    "apps.chat",
+    "apps.children",
+    "apps.hospital",
+    "apps.pharmacy",
+    "apps.registerPrescription",
 ]
 
 MIDDLEWARE = [

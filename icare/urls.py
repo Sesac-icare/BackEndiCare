@@ -24,9 +24,7 @@ from drf_yasg import openapi
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="iCare API",
-        default_version='v1',
-        description="iCare API 문서",
+        title="icare API", default_version="v1", description="아이케어 API 문서"
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),
@@ -34,9 +32,12 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("users/", include("users.urls")),  # 'users' 앱의 URL 패턴 포함
-    path("chat/", include("chat.urls")),  # 'users' 앱의 URL 패턴 포함
-    path("prescriptions/", include("registerPrescription.urls")),  # 추가
+    path("users/", include("users.urls")),
+    path("chat/", include("chat.urls")),
+    path("prescriptions/", include("registerPrescription.urls")),
+    path("children/", include("children.urls")),
+    path("hospital/", include("hospital.urls")),
+    path("pharmacy/", include("pharmacy.urls")),
     
     # Swagger 및 ReDoc 경로
     re_path(

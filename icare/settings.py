@@ -26,6 +26,9 @@ LANGCHAIN_API_KEY = env("LANGCHAIN_API_KEY", default=None)
 HUGGINGFACEHUB_API_TOKEN = env("HUGGINGFACEHUB_API_TOKEN", default=None)
 TAVILY_API_KEY = env("TAVILY_API_KEY", default=None)
 
+# OCR API 설정
+SECRET_KEY_OCR = env('SECRET_KEY_OCR')
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -55,11 +58,11 @@ INSTALLED_APPS = [
     "drf_yasg",
     "chat",
     "registerPrescription",
+    "children",
 ]
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
-    "django.middleware.security.SecurityMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",

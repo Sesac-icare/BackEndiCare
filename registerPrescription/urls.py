@@ -1,9 +1,8 @@
 from django.urls import path
-from .views import OCRAPIView, PrescriptionListView, PrescriptionDetailView
-
+from . import views
 
 urlpatterns = [
-    path('ocr/', OCRAPIView.as_view(), name='ocr_api'),
-    path('prescriptions/', PrescriptionListView.as_view(), name='prescription-list'),
-    path('prescriptions/<int:pk>/', PrescriptionDetailView.as_view(), name='prescription-detail'),
+    path('ocr/', views.OCRAPIView.as_view(), name='ocr_process'),
+    path('list/', views.EnvelopeListView.as_view(), name='envelope_list'),
+    path('detail/<int:envelope_id>/', views.EnvelopeDetailView.as_view(), name='envelope_detail'),
 ]

@@ -13,7 +13,7 @@ class Prescription(models.Model):
         ordering = ['-created_at']
         verbose_name = '처방전'
         verbose_name_plural = '처방전 목록'
-        db_table = 'pharmacy_envelopes'
+        db_table = 'prescriptions'
 
     def __str__(self):
         return f"{self.child.name}의 처방전 ({self.prescription_date})"
@@ -33,3 +33,14 @@ class Medicine(models.Model):
 
     def __str__(self):
         return f"{self.name} (복용량: {self.dosage}, 수량: {self.quantity})"
+
+class PharmacyEnvelope(models.Model):
+    envelope_id = models.AutoField(primary_key=True)
+    child = models.ForeignKey(Children, on_delete=models.CASCADE)
+    pharmacy_name = models.CharField(max_length=255)
+    prescription_number = models.CharField(max_length=50, unique=True)
+    prescription_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'pharmacy_envelopes'

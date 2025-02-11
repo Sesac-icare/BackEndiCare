@@ -13,8 +13,8 @@ from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.db import models
 from users.models import User
-from children.models import Children
-from .models import PharmacyEnvelope  # 모델을 import
+
+from .models import PharmacyEnvelope, Children  # 모델을 import
 
 # 환경변수에서 시크릿 키 불러오기
 from django.conf import settings
@@ -46,7 +46,7 @@ class OCRAPIView(APIView):
 
     def call_ocr(self, image_path):
         """CLOVA OCR API 요청 및 결과 출력"""
-        API_URL = "https://3ja254nf6l.apigw.ntruss.com/custom/v1/38065/f6e2a7f6d39340c1a967762f8265e55ed0cf9e441f30ee185ba6a26df73d34db/general"
+        API_URL = "https://naveropenapi.apigw.ntruss.com/vision-ocr/v1/ocr"
         SECRET_KEY = SECRET_KEY_OCR
 
         request_json = {

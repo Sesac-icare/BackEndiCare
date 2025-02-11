@@ -56,10 +56,12 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_yasg",
     # 로컬 앱
-    "apps.chat",
-    "apps.register",
-    "apps.search",
-    "apps.users",
+    "chat",
+    "registerPrescription",
+    "searchHospital",
+    "searchPharmacy",
+    "icare",
+    "users",
 ]
 
 MIDDLEWARE = [
@@ -127,11 +129,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",  # Token 인증 활성화
-    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": [],
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated",  # 기본 인증 요구
+        "rest_framework.permissions.AllowAny",  # 모든 요청 허용
     ],
 }
 

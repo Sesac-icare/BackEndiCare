@@ -1,6 +1,16 @@
 from django.db import models
 from users.models import User
-from children.models import Children
+from django.conf import settings
+# from children.models import Children
+
+class Children(models.Model):
+    child_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    child_name = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'children' 
 
 class Prescription(models.Model):
     child = models.ForeignKey(Children, on_delete=models.CASCADE, related_name='prescriptions', verbose_name='아동')
@@ -44,3 +54,15 @@ class PharmacyEnvelope(models.Model):
 
     class Meta:
         db_table = 'pharmacy_envelopes'
+
+from django.db import models
+from django.conf import settings
+
+# class Children(models.Model):
+#     child_id = models.AutoField(primary_key=True)
+#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+#     child_name = models.CharField(max_length=100)
+#     created_at = models.DateTimeField(auto_now_add=True)
+
+#     class Meta:
+#         db_table = 'children' 

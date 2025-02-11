@@ -2,7 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from .models import User, Child, PharmacyEnvelope
-from .serializers import UserSerializer, ChildSerializer, PharmacyEnvelopeSerializer
+from .serizlizers import UserSerializer, ChildSerializer, PharmacyEnvelopeSerializer
 
 # ─── 사용자 관련 API ──────────────────────────────
 

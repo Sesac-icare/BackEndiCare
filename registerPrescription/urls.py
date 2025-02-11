@@ -1,9 +1,9 @@
+# pharmacy/urls.py
 from django.urls import path
-from .views import OCRAPIView, PrescriptionListView, PrescriptionDetailView
-
+from .views import OCRAPIView, EnvelopeListView, EnvelopeDetailView
 
 urlpatterns = [
     path('ocr/', OCRAPIView.as_view(), name='ocr_api'),
-    path('prescriptions/', PrescriptionListView.as_view(), name='prescription-list'),
-    path('prescriptions/<int:pk>/', PrescriptionDetailView.as_view(), name='prescription-detail'),
+    path('envelopes/', EnvelopeListView.as_view(), name='envelope_list'),
+    path('envelopes/<uuid:envelope_id>/', EnvelopeDetailView.as_view(), name='envelope_detail'),
 ]

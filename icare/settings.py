@@ -55,12 +55,11 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "corsheaders",
     "drf_yasg",
-    "apps.users",
+    # 로컬 앱
     "apps.chat",
-    "apps.children",
-    "apps.hospital",
-    "apps.pharmacy",
-    "apps.registerPrescription",
+    "apps.register",
+    "apps.search",
+    "apps.users",
 ]
 
 MIDDLEWARE = [

@@ -34,7 +34,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("users/", include("users.urls")),
     path("chat/", include("chat.urls")),
-    path("prescriptions/", include("registerPrescription.urls")),
+    path("prescriptions/", include("registerPrescription.urls")),   # registerPrescription 앱의 URL 추가
     path("children/", include("children.urls")),
     path("hospital/", include("hospital.urls")),
     path("pharmacy/", include("pharmacy.urls")),

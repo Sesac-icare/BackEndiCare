@@ -123,7 +123,7 @@ class PharmacyEnvelope(models.Model):
     envelope_id = models.AutoField(primary_key=True)
     child = models.ForeignKey(Children, on_delete=models.CASCADE)
     pharmacy_name = models.CharField(max_length=255)
-    prescription_number = models.CharField(max_length=50, unique=True)
+    prescription_number = models.CharField(max_length=50)
     prescription_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
 

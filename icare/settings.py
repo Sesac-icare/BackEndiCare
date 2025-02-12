@@ -27,7 +27,7 @@ HUGGINGFACEHUB_API_TOKEN = env("HUGGINGFACEHUB_API_TOKEN", default=None)
 TAVILY_API_KEY = env("TAVILY_API_KEY", default=None)
 
 # OCR API 설정
-SECRET_KEY_OCR = env('SECRET_KEY_OCR')
+# SECRET_KEY_OCR = env('SECRET_KEY_OCR')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,7 +39,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework.authtoken",
+    "rest_framework_simplejwt",
     "corsheaders",
     "drf_yasg",
     # 로컬 앱
@@ -62,6 +63,7 @@ INSTALLED_APPS = [
     "searchPharmacy",
     "icare",
     "users",
+    "children",
 ]
 
 MIDDLEWARE = [
@@ -75,7 +77,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-CORS_ORIGIN_ALLOW_ALL = True
+# CORS 설정
+CORS_ORIGIN_ALLOW_ALL = True  # 모든 도메인에서의 요청 허용
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "icare.urls"

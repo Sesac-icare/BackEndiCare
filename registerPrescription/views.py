@@ -15,6 +15,8 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
+from rest_framework import status
+from django.db.models import F
 
 logger = logging.getLogger(__name__)
 
@@ -266,4 +268,37 @@ class ClovaOCRAPIView(APIView):
             return Response({
                 'error': f'처방전 저장 중 오류가 발생했습니다: {str(e)}'
             }, status=400)
+
+class PrescriptionListView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            # 현재 로그인한 사용자의 모든 자녀들의 처방전 조회
+            prescriptions = PharmacyEnvelope.objects.filter(
+                child__user=request.user
+            ).select_related('child').order_by('-created_at')
+
+            prescription_list = []
+            for prescription in prescriptions:
+                prescription_data = {
+                    'envelope_id': prescription.envelope_id,
+                    'child_name': prescription.child.child_name,
+                    'pharmacy_name': prescription.pharmacy_name,
+                    'prescription_number': prescription.prescription_number,
+                    'prescription_date': prescription.prescription_date,
+                    'created_at': prescription.created_at
+                }
+                prescription_list.append(prescription_data)
+
+            return Response({
+                'count': len(prescription_list),
+                'results': prescription_list
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({
+                'error': f'처방전 조회 중 오류가 발생했습니다: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
 

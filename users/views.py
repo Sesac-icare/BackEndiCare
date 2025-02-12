@@ -95,6 +95,53 @@ class UserInfoView(APIView):
         )
 
 
+# 회원탈퇴
+class UserDeleteView(APIView):
+    permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 가능
+
+    @swagger_auto_schema(
+        operation_description="회원 탈퇴 API",
+        responses={
+            200: openapi.Response(
+                description="회원 탈퇴 성공",
+                examples={
+                    "application/json": {"message": "회원 탈퇴가 완료되었습니다."}
+                },
+            ),
+            401: openapi.Response(
+                description="인증되지 않은 사용자",
+                examples={
+                    "application/json": {
+                        "detail": "자격 인증데이터(authentication credentials)가 제공되지 않았습니다."
+                    }
+                },
+            ),
+        },
+    )
+    def delete(self, request):
+        user = request.user
+        try:
+            # 사용자 토큰 삭제
+            if hasattr(user, "auth_token"):
+                user.auth_token.delete()
+
+            # UserProfile 삭제 (CASCADE 설정이 되어있다면 자동으로 삭제됨)
+            if hasattr(user, "userprofile"):
+                user.userprofile.delete()
+
+            # 사용자 계정 삭제
+            user.delete()
+
+            return Response(
+                {"message": "회원 탈퇴가 완료되었습니다."}, status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {"error": "회원 탈퇴 처리 중 오류가 발생했습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
 # ----------------------------------------------------------------------------
 
 

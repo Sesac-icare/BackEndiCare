@@ -17,7 +17,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 from rest_framework import status
 from django.db.models import F
-from django.db import connection
 
 logger = logging.getLogger(__name__)
 
@@ -32,13 +31,6 @@ class ClovaOCRAPIView(APIView):
     authentication_classes = [TokenAuthentication]  # 명시적으로 지정
     permission_classes = [IsAuthenticated]  # 명시적으로 지정
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # 클래스 초기화 시 WAL 모드 설정
-        with connection.cursor() as cursor:
-            cursor.execute('PRAGMA journal_mode=WAL')
-            cursor.execute('PRAGMA busy_timeout=10000')
-
     def extract_table_from_ocr(self, ocr_result):
         """
         OCR 결과의 table 영역을 판다스 DataFrame으로 변환.
@@ -174,65 +166,15 @@ class ClovaOCRAPIView(APIView):
         
         return result
 
+    @transaction.atomic
     def post(self, request, *args, **kwargs):
         if 'image' not in request.data or 'child_name' not in request.data:
             logger.error("No image file or child name provided in the request data.")
             return Response({'error': 'No image file or child name provided'}, status=400)
-
-        # OCR 처리는 트랜잭션 밖에서 수행
-        try:
-            image_file = request.data['image']
-            image_file.seek(0)
-            image_data = image_file.read()
-            image_base64 = base64.b64encode(image_data).decode('utf-8')
-            
-            # OCR API 호출 및 결과 처리
-            ocr_result = self._process_ocr(image_base64, image_file.name)
-            table_df = self.extract_table_from_ocr(ocr_result)
-            final_result = self.process_extracted_table(table_df, request.data['child_name'])
-            
-            # 데이터베이스 작업은 짧은 트랜잭션으로 처리
-            return self._save_prescription_data(request, final_result)
-
-        except Exception as e:
-            logger.exception("Error in prescription processing")
-            return Response({
-                'error': f'처방전 처리 중 오류가 발생했습니다: {str(e)}'
-            }, status=500)
-
-    def _process_ocr(self, image_base64, filename):
-        """OCR 처리를 위한 별도 메서드"""
-        timestamp = int(time.time() * 1000)
-        payload = {
-            "version": "V2",
-            "requestId": str(uuid.uuid4()),
-            "timestamp": timestamp,
-            "lang": "ko",
-            "images": [
-                {
-                    "format": "jpg",
-                    "name": filename,
-                    "data": image_base64
-                }
-            ],
-            "enableTableDetection": True
-        }
         
-        headers = {
-            "Content-Type": "application/json",
-            "X-OCR-SECRET": CLOVA_OCR_SECRET
-        }
-        
-        response = requests.post(OCR_API_URL, headers=headers, data=json.dumps(payload))
-        response.raise_for_status()
-        return response.json()
-
-    @transaction.atomic
-    def _save_prescription_data(self, request, final_result):
-        """데이터베이스 저장을 위한 별도 메서드"""
-        # 자녀 정보 처리
+        # 현재 로그인한 사용자의 자녀 찾기 또는 생성
         try:
-            child = Children.objects.select_for_update(nowait=True).get(
+            child = Children.objects.get(
                 user=request.user,
                 child_name=request.data['child_name']
             )
@@ -241,28 +183,91 @@ class ClovaOCRAPIView(APIView):
                 user=request.user,
                 child_name=request.data['child_name']
             )
-        
-        # 유니크한 교부번호 생성
-        unique_number = f"{final_result['교부번호']}_{uuid.uuid4().hex[:8]}"
-        
-        # 처방전 정보 저장
-        envelope = PharmacyEnvelope.objects.create(
-            child=child,
-            pharmacy_name=final_result['상 호(약국명)'],
-            prescription_number=unique_number,
-            prescription_date=final_result['조제일자(발행일)']
-        )
 
-        response_data = {
-            'message': '처방전이 성공적으로 등록되었습니다.',
-            'envelope_id': envelope.envelope_id,
-            'child_name': child.child_name,
-            'pharmacy_name': envelope.pharmacy_name,
-            'prescription_date': envelope.prescription_date,
-            'user_email': request.user.email
+        image_file = request.data['image']
+        image_file.seek(0)
+        
+        # 이미지 파일을 base64로 인코딩
+        image_data = image_file.read()
+        image_base64 = base64.b64encode(image_data).decode('utf-8')
+        
+        # 현재 타임스탬프 생성
+        timestamp = int(time.time() * 1000)
+        
+        # 요청 페이로드 구성
+        payload = {
+            "version": "V2",
+            "requestId": str(uuid.uuid4()),
+            "timestamp": timestamp,
+            "lang": "ko",
+            "images": [
+                {
+                    "format": "jpg",  # 이미지 형식에 맞게 변경
+                    "name": image_file.name,
+                    "data": image_base64
+                }
+            ],
+            "enableTableDetection": True  # 표 인식을 활성화
         }
         
-        return Response(response_data, status=201)
+        # 요청 헤더 설정
+        headers = {
+            "Content-Type": "application/json",
+            "X-OCR-SECRET": CLOVA_OCR_SECRET
+        }
+        
+        try:
+            response = requests.post(OCR_API_URL, headers=headers, data=json.dumps(payload))
+            response.raise_for_status()
+        except requests.RequestException as e:
+            logger.exception("Error calling Clova OCR API")
+            return Response({'error': 'Error calling Clova OCR API', 'detail': str(e)}, status=500)
+        
+        try:
+            ocr_result = response.json()
+        except ValueError:
+            logger.exception("Error parsing JSON response from Clova OCR API")
+            return Response({'error': 'Invalid JSON response from Clova OCR API'}, status=500)
+        
+        # 표 데이터 추출 (DataFrame)
+        table_df = self.extract_table_from_ocr(ocr_result)
+        
+        # 후처리: 원하는 필드들을 추출하여 최종 결과 구성
+        final_result = self.process_extracted_table(table_df, child.child_name)
+        
+        # 현재 로그인한 사용자와 연결
+        final_result['user'] = request.user.username
+        
+        # OCR 결과를 데이터베이스에 저장
+        try:
+            # 유니크한 교부번호 생성
+            unique_number = f"{final_result['교부번호']}_{uuid.uuid4().hex[:8]}"
+            
+            # 처방전 정보 저장
+            envelope = PharmacyEnvelope.objects.create(
+                child=child,
+                pharmacy_name=final_result['상 호(약국명)'],
+                prescription_number=unique_number,  # 유니크한 번호 사용
+                prescription_date=final_result['조제일자(발행일)']
+            )
+
+            # 응답에 저장된 정보 포함
+            response_data = {
+                'message': '처방전이 성공적으로 등록되었습니다.',
+                'envelope_id': envelope.envelope_id,
+                'child_name': child.child_name,
+                'pharmacy_name': envelope.pharmacy_name,
+                'prescription_date': envelope.prescription_date,
+                'user_email': request.user.email
+            }
+            
+            return Response(response_data, status=201)
+
+        except Exception as e:
+            logger.exception("Error saving prescription data")
+            return Response({
+                'error': f'처방전 저장 중 오류가 발생했습니다: {str(e)}'
+            }, status=400)
 
 class PrescriptionListView(APIView):
     authentication_classes = [TokenAuthentication]

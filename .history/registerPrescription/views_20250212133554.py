@@ -32,13 +32,6 @@ class ClovaOCRAPIView(APIView):
     authentication_classes = [TokenAuthentication]  # 명시적으로 지정
     permission_classes = [IsAuthenticated]  # 명시적으로 지정
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # 클래스 초기화 시 WAL 모드 설정
-        with connection.cursor() as cursor:
-            cursor.execute('PRAGMA journal_mode=WAL')
-            cursor.execute('PRAGMA busy_timeout=10000')
-
     def extract_table_from_ocr(self, ocr_result):
         """
         OCR 결과의 table 영역을 판다스 DataFrame으로 변환.
@@ -230,6 +223,13 @@ class ClovaOCRAPIView(APIView):
     @transaction.atomic
     def _save_prescription_data(self, request, final_result):
         """데이터베이스 저장을 위한 별도 메서드"""
+        from django.db import connection
+        
+        # 데이터베이스 연결 설정
+        with connection.cursor() as cursor:
+            cursor.execute('PRAGMA journal_mode=WAL')  # Write-Ahead Logging 모드 활성화
+            cursor.execute('PRAGMA busy_timeout=10000')  # 10초 타임아웃 설정
+        
         # 자녀 정보 처리
         try:
             child = Children.objects.select_for_update(nowait=True).get(

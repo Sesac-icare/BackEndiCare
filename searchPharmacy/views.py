@@ -23,7 +23,7 @@ def fetch_pharmacies():
     추가로 각 약국의 대표전화와 요일별 진료시간 및 오늘의 영업 상태(영업중/영업종료) 정보를 포함합니다.
     """
     url = "http://apis.data.go.kr/B552657/ErmctInsttInfoInqireService/getParmacyFullDown"
-    service_key = ""
+    service_key = "bl6Z26NsEaqUzK7j8dW1Vb7xC0RWCsNlCI9dtcvho2yIoUMuGuFnzFJa7hdW6xCSo1d9IHJxboO65Bt6LIY82g=="
     
     params = {
         "serviceKey": service_key,

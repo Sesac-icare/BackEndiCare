@@ -29,11 +29,9 @@ def fetch_pharmacies():
     Open API를 통해 전체 약국 데이터를 받아와서, 주소에 '서울'이 포함된 항목만 반환합니다.
     추가로 각 약국의 대표전화와 요일별 진료시간 및 오늘의 영업 상태(영업중/영업종료) 정보를 포함합니다.
     """
-    url = (
-        "http://apis.data.go.kr/B552657/ErmctInsttInfoInqireService/getParmacyFullDown"
-    )
+    url = "http://apis.data.go.kr/B552657/ErmctInsttInfoInqireService/getParmacyFullDown"
     service_key = ""
-
+    
     params = {
         "serviceKey": service_key,
         "pageNo": 1,

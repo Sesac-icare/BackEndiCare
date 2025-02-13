@@ -61,7 +61,8 @@ class DrugSearchAPIView(APIView):
                     "itemName": item.get("itemName", "N/A"),
                     "efcyQesitm": item.get("efcyQesitm", "N/A"),
                     "atpnQesitm": item.get("atpnQesitm", "N/A"),
-                    "depositMethodQesitm": item.get("depositMethodQesitm", "N/A")
+                    "depositMethodQesitm": item.get("depositMethodQesitm", "N/A"),
+                    "entpName": item.get("entpName", "N/A"),
                 }
                 results.append(extracted)
             

@@ -38,6 +38,7 @@ urlpatterns = [
     # path("children/", include("children.urls")),
     path("hospital/", include("searchHospital.urls")),
     path("pharmacy/", include("searchPharmacy.urls")),
+    path("drug/", include("drugapp.urls")),
     
     # Swagger 및 ReDoc 경로
     re_path(

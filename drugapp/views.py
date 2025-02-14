@@ -56,6 +56,7 @@ class DrugSearchAPIView(APIView):
             
             # 원하는 필드만 추출하여 결과 리스트 구성
             results = []
+            # 일단 5개만 출력
             for item in items:
                 extracted = {
                     "itemName": item.get("itemName", "N/A"),

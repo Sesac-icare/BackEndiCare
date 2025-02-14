@@ -2,7 +2,7 @@ import requests
 import xml.etree.ElementTree as ET
 import math
 from datetime import datetime
-
+from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -120,6 +120,9 @@ def format_pharmacy_data(pharmacy_info):
     }
 
 class PharmacyListAPIView(APIView):
+    authentication_classes = []  
+    permission_classes = [AllowAny]  # 인증 없이 접근 허용
+    
     """
     GET 요청 시 반경 10km 이내의 약국만 반환합니다.
     """
@@ -146,7 +149,7 @@ class PharmacyListAPIView(APIView):
             pharmacy.pop("lat", None)
             pharmacy.pop("lon", None)
 
-        formatted_pharmacies = [format_pharmacy_data(p) for p in pharmacies_sorted]
+        formatted_pharmacies = [format_pharmacy_data(p) for p in pharmacies_sorted[:5]]
 
         # 프론트에 넘겨주기
         return Response(formatted_pharmacies)

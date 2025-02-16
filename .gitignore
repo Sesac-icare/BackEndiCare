@@ -26,6 +26,7 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 media/
+logs/
 
 # 3️ 환경 변수 파일 (보안)
 .env
@@ -51,3 +52,6 @@ ENV/
 *.bak
 *.tmp
 *.temp
+
+# 테스트 폴더
+chat/test/

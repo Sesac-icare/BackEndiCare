@@ -15,6 +15,6 @@ class PrescriptionAdmin(admin.ModelAdmin):
 
 @admin.register(Medicine)
 class MedicineAdmin(admin.ModelAdmin):
-    list_display = ['name', 'dosage', 'quantity', 'prescription']
+    list_display = ['name', 'dosage', 'frequency', 'duration', 'prescription']
     list_filter = ['created_at']
     search_fields = ['name']

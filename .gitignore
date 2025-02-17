@@ -55,3 +55,6 @@ ENV/
 
 # 테스트 폴더
 chat/test/
+
+# registerPrescription test data
+registerPrescription/testdata/

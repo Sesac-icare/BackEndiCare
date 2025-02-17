@@ -4,6 +4,7 @@ from .views import (
     PrescriptionListView,
     PrescriptionListByDateView,
     PrescriptionDeleteView,
+    PrescriptionDetailView,
 )
 
 urlpatterns = [
@@ -15,8 +16,13 @@ urlpatterns = [
         name="prescription-list-by-date",
     ),
     path(
-        "prescriptions/<int:envelope_id>/",
+        "<int:prescription_id>/",
         PrescriptionDeleteView.as_view(),
         name="prescription-delete",
+    ),
+    path(
+        "detail/<int:prescription_id>/",
+        PrescriptionDetailView.as_view(),
+        name="prescription-detail",
     ),
 ]

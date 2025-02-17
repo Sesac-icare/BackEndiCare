@@ -1,18 +1,9 @@
 from django.urls import path
-from . import views
+from .views import HospitalSearchView, OpenHospitalSearchView, NearbyPharmacyView
 
 urlpatterns = [
-    # 병원 관련 API
-    path('hospitals/nearby/', views.nearby_hospitals, name='nearby_hospitals'),
-
-    # 사용자 관련 API
-    path('users/create/', views.create_user, name='create_user'),
-
-    # 자녀 관련 API
-    path('children/create/', views.create_child, name='create_child'),
-    path('children/', views.list_children, name='list_children'),
-
-    # 약국 봉투 관련 API
-    path('pharmacy-envelopes/create/', views.create_pharmacy_envelope, name='create_pharmacy_envelope'),
-    path('pharmacy-envelopes/', views.list_pharmacy_envelopes, name='list_pharmacy_envelopes'),
+    # 병원 검색 API
+    path('search/', HospitalSearchView.as_view(), name='hospital-search'),
+    path('open/', OpenHospitalSearchView.as_view(), name='open-hospital-search'),
+    path('nearby-pharmacies/', NearbyPharmacyView.as_view(), name='nearby-pharmacies'),
 ]

@@ -23,7 +23,7 @@ class Prescription(models.Model):
         return f"{self.child.child_name}의 처방전 ({self.prescription_date})"
 
 class Medicine(models.Model):
-    medicine_id = models.AutoField(primary_key=True)
+    medicine_id = models.AutoField(primary_key=True, default=1)
     prescription = models.ForeignKey(
         Prescription, 
         on_delete=models.CASCADE, 
@@ -32,8 +32,8 @@ class Medicine(models.Model):
     )
     name = models.CharField(max_length=255, verbose_name='약품명', db_column='medicine_name')
     dosage = models.CharField(max_length=50, verbose_name='복용량')
-    frequency = models.IntegerField(verbose_name='투약횟수')
-    duration = models.IntegerField(verbose_name='투약일수')
+    frequency = models.IntegerField(verbose_name='투약횟수', null=True, default=0)
+    duration = models.IntegerField(verbose_name='투약일수', null=True, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

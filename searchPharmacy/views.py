@@ -12,6 +12,8 @@ import requests
 import xml.etree.ElementTree as ET
 import math
 from datetime import datetime
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 def haversine(lat1, lon1, lat2, lon2):
     if None in (lat1, lon1, lat2, lon2):  
@@ -73,6 +75,11 @@ class OpenPharmacyListAPIView(APIView):
     """영업중인 약국 목록을 반환하는 API"""
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_summary="영업중인 약국 검색",
+        operation_description="현재 영업중인 약국 목록을 반환합니다.",
+        tags=['pharmacy']
+    )
     def get(self, request, *args, **kwargs):
         try:
             user_profile = request.user.profile
@@ -97,7 +104,7 @@ class OpenPharmacyListAPIView(APIView):
                     ) * 6371
                 )
                 .filter(distance__lte=10)  # 10km 이내
-                .order_by('distance')
+                .order_by('distance')[:10]  # 최대 10개로 제한
             )
 
             # 영업중인 약국만 필터링
@@ -106,6 +113,8 @@ class OpenPharmacyListAPIView(APIView):
                 formatted_data = format_pharmacy_data(pharmacy)
                 if formatted_data["영업 상태"] == "영업중":
                     formatted_pharmacies.append(formatted_data)
+                if len(formatted_pharmacies) >= 10:  # 10개 채우면 중단
+                    break
 
             return Response(formatted_pharmacies)
 
@@ -116,10 +125,15 @@ class OpenPharmacyListAPIView(APIView):
             )
 
 class NearbyPharmacyListAPIView(APIView):
-    """가까운 순서대로 약국 목록을 반환하는 API"""
+    """가까운 약국 목록을 반환하는 API"""
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
+    @swagger_auto_schema(
+        operation_summary="근처 약국 목록 조회",
+        operation_description="사용자 위치 기반으로 근처 약국 목록을 반환합니다.",
+        tags=['pharmacy']
+    )
+    def get(self, request):
         try:
             user_profile = request.user.profile
             if not (user_profile.latitude and user_profile.longitude):
@@ -130,24 +144,24 @@ class NearbyPharmacyListAPIView(APIView):
 
             ref_lat = float(user_profile.latitude)
             ref_lon = float(user_profile.longitude)
-
-            nearby_pharmacies = (
-                Pharmacy.objects
-                .annotate(
-                    distance=ACos(
-                        Cos(Radians(ref_lat)) * 
-                        Cos(Radians(F('latitude'))) * 
-                        Cos(Radians(F('longitude')) - Radians(ref_lon)) + 
-                        Sin(Radians(ref_lat)) * 
-                        Sin(Radians(F('latitude')))
-                    ) * 6371
-                )
-                .filter(distance__lte=10)  # 10km 이내
-                .order_by('distance')[:5]  # 가까운 5개만
-            )
-
-            formatted_pharmacies = [format_pharmacy_data(p) for p in nearby_pharmacies]
-            return Response(formatted_pharmacies)
+            radius = float(request.GET.get('radius', 3))  # km 단위
+            
+            pharmacies = Pharmacy.objects.annotate(
+                distance=ACos(
+                    Cos(Radians(ref_lat)) * 
+                    Cos(Radians(F('latitude'))) * 
+                    Cos(Radians(F('longitude')) - Radians(ref_lon)) + 
+                    Sin(Radians(ref_lat)) * 
+                    Sin(Radians(F('latitude')))
+                ) * 6371
+            ).filter(distance__lte=radius).order_by('distance')
+            
+            results = []
+            for pharmacy in pharmacies:
+                formatted_data = format_pharmacy_data(pharmacy)
+                results.append(formatted_data)
+            
+            return Response(results)
 
         except Exception as e:
             return Response(

@@ -24,32 +24,25 @@ from drf_yasg import openapi
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="icare API", default_version="v1", description="아이케어 API 문서"
+        title="iCare API",
+        default_version='v1',
+        description="iCare API documentation",
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),
 )
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("users/", include("users.urls")),
-    path("chat/", include("chat.urls")),
-    path("prescriptions/", include("registerPrescription.urls")),   # registerPrescription 앱의 URL 추가
-    # path("children/", include("children.urls")),
-    path("hospital/", include("searchHospital.urls")),
-    path("pharmacy/", include("searchPharmacy.urls")),
-    path("drug/", include("drugapp.urls")),
+    path('admin/', admin.site.urls),
+    path('users/', include('users.urls')),
+    path('chat/', include('chat.urls')),
+    path('prescriptions/', include('registerPrescription.urls')),
+    path('hospital/', include('searchHospital.urls')),  # 전체 hospital URL 포함
+    path('pharmacy/', include('searchPharmacy.urls')),
+    path('drug/', include('drugapp.urls')),
     
-    # Swagger 및 ReDoc 경로
-    re_path(
-        r"^swagger(?P<format>\.json|\.yaml)$",
-        schema_view.without_ui(cache_timeout=0),
-        name="schema-json",
-    ),
-    path(
-        "swagger/",
-        schema_view.with_ui("swagger", cache_timeout=0),
-        name="schema-swagger-ui",
-    ),
-    path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
+    # Swagger URLs
+    path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]

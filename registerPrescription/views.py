@@ -267,16 +267,19 @@ class ClovaOCRAPIView(APIView):
                 duration=final_result.get('투약일수', '0')
             )
 
-            # Medicine 테이블에 약품 목록 저장
-            medicines = final_result.get('약품목록', [])
-            for med in medicines:
-                Medicine.objects.create(
+            # Medicine 테이블에 약품 목록 저장 - bulk_create 사용
+            medicines_to_create = [
+                Medicine(
                     prescription=prescription,
                     name=med.get('약품명', ''),
                     dosage=med.get('투약량', 1),
                     frequency=med.get('투약횟수', 1),
                     duration=med.get('투약일수', 1)
-                )
+                ) for med in final_result.get('약품목록', [])
+            ]
+            
+            if medicines_to_create:
+                Medicine.objects.bulk_create(medicines_to_create)
 
             return Response({
                 "success": True,

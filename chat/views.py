@@ -76,12 +76,17 @@ class UnifiedChatAPIView(APIView):
         temp_files = []  # 임시 파일 관리
 
         try:
+            # 요청 데이터 로깅
+            logger.info(f"Received request data: {request.data}")
+            logger.info(f"Received files: {request.FILES}")
+
             # 1. 입력 처리 (음성 또는 텍스트)
             input_text = None
             input_type = "text"
 
             # 음성 입력 처리
             if 'audio' in request.FILES:
+                logger.info("Processing audio input")
                 input_type = "voice"
                 audio_file = request.FILES['audio']
                 temp_audio_path = os.path.join(tempfile.gettempdir(), f'temp_audio_{uuid.uuid4()}.wav')
@@ -90,9 +95,12 @@ class UnifiedChatAPIView(APIView):
                 with open(temp_audio_path, 'wb') as temp_file:
                     for chunk in audio_file.chunks():
                         temp_file.write(chunk)
+                logger.info(f"Audio file saved to: {temp_audio_path}")
 
                 input_text = transcribe_speech(temp_audio_path)
+                logger.info(f"Transcribed text: {input_text}")
                 if not input_text:
+                    logger.error("Speech recognition failed")
                     return Response(
                         {"error": "음성 인식에 실패했습니다."},
                         status=status.HTTP_400_BAD_REQUEST
@@ -100,14 +108,18 @@ class UnifiedChatAPIView(APIView):
             
             # 텍스트 입력 처리
             else:
+                logger.info("Processing text input")
                 input_text = request.data.get('message')
+                logger.info(f"Received message: {input_text}")
                 if not input_text:
+                    logger.error("No message provided")
                     return Response(
                         {"error": "메시지가 제공되지 않았습니다."},
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
             # 2. GPT 응답 생성
+            logger.info("Generating GPT response")
             messages = [
                 {
                     "role": "system",
@@ -116,40 +128,54 @@ class UnifiedChatAPIView(APIView):
                 {"role": "user", "content": input_text}
             ]
 
-            completion = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=messages,
-                max_tokens=150
-            )
-            response_text = completion.choices[0].message.content.strip()
+            try:
+                completion = client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=messages,
+                    max_tokens=150
+                )
+                response_text = completion.choices[0].message.content.strip()
+                logger.info(f"GPT response generated: {response_text}")
+            except Exception as e:
+                logger.error(f"GPT API error: {str(e)}")
+                raise
 
-            # 3. 음성 응답 생성 (need_voice가 true일 경우)
+            # 3. 결과 구성
             result = {
                 "input_type": input_type,
                 "input_text": input_text,
                 "response_text": response_text
             }
 
+            # 4. 음성 응답 생성 (need_voice가 true일 경우)
             need_voice = request.data.get('need_voice', False)
+            logger.info(f"Need voice response: {need_voice}")
+            
             if need_voice:
+                logger.info("Generating voice response")
                 temp_tts_path = os.path.join(tempfile.gettempdir(), f'temp_tts_{uuid.uuid4()}.mp3')
                 temp_files.append(temp_tts_path)
 
-                tts = gTTS(text=response_text, lang='ko')
-                tts.save(temp_tts_path)
+                try:
+                    tts = gTTS(text=response_text, lang='ko')
+                    tts.save(temp_tts_path)
+                    logger.info("TTS file generated successfully")
 
-                with open(temp_tts_path, 'rb') as f:
-                    audio_content = base64.b64encode(f.read()).decode('utf-8')
+                    with open(temp_tts_path, 'rb') as f:
+                        audio_content = base64.b64encode(f.read()).decode('utf-8')
 
-                result.update({
-                    "audio": audio_content,
-                    "audio_type": "audio/mp3"
-                })
+                    result.update({
+                        "audio": audio_content,
+                        "audio_type": "audio/mp3"
+                    })
+                except Exception as e:
+                    logger.error(f"TTS generation error: {str(e)}")
+                    raise
 
             return Response(result, status=status.HTTP_200_OK)
 
         except Exception as e:
-            print(f"Error in UnifiedChatAPIView: {str(e)}")
+            logger.error(f"Error in UnifiedChatAPIView: {str(e)}", exc_info=True)
             return Response(
                 {"error": f"처리 중 오류가 발생했습니다: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -161,7 +187,8 @@ class UnifiedChatAPIView(APIView):
                 if os.path.exists(temp_file):
                     try:
                         os.unlink(temp_file)
+                        logger.info(f"Temporary file deleted: {temp_file}")
                     except Exception as e:
-                        print(f"임시 파일 삭제 오류: {str(e)}")
+                        logger.error(f"Error deleting temporary file: {str(e)}")
             
             

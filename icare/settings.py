@@ -114,9 +114,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'icare',
-        'USER': 'root',
-        'PASSWORD': 'wldls0119@@',
-        'HOST': 'localhost',
+        'USER': 'tester',
+        'PASSWORD': 'test1234',
+        'HOST': 'db',
         'PORT': '3306',
         'OPTIONS': {
             'charset': 'utf8mb4',

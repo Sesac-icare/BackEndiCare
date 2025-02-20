@@ -14,6 +14,9 @@ import math
 from datetime import datetime
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+import logging
+
+logger = logging.getLogger(__name__)
 
 def haversine(lat1, lon1, lat2, lon2):
     if None in (lat1, lon1, lat2, lon2):  
@@ -92,6 +95,13 @@ class OpenPharmacyListAPIView(APIView):
             ref_lat = float(user_profile.latitude)
             ref_lon = float(user_profile.longitude)
 
+            # 위치 정보 출력
+            print("\n=== OpenPharmacy Search Location Info ===")
+            print(f"User: {request.user.username}")
+            print(f"Raw location - lat: {user_profile.latitude}, lon: {user_profile.longitude}")
+            print(f"Converted location - lat: {ref_lat}, lon: {ref_lon}")
+            print("===================================\n")
+
             nearby_pharmacies = (
                 Pharmacy.objects
                 .annotate(
@@ -107,18 +117,22 @@ class OpenPharmacyListAPIView(APIView):
                 .order_by('distance')[:10]  # 최대 10개로 제한
             )
 
+            print(f"Found {nearby_pharmacies.count()} pharmacies within 10km")
+
             # 영업중인 약국만 필터링
             formatted_pharmacies = []
             for pharmacy in nearby_pharmacies:
                 formatted_data = format_pharmacy_data(pharmacy)
                 if formatted_data["영업 상태"] == "영업중":
                     formatted_pharmacies.append(formatted_data)
+                    print(f"Added pharmacy: {pharmacy.name} at {pharmacy.distance:.1f}km (영업중)")
                 if len(formatted_pharmacies) >= 10:  # 10개 채우면 중단
                     break
 
             return Response(formatted_pharmacies)
 
         except Exception as e:
+            print(f"OpenPharmacy search error: {str(e)}")
             return Response(
                 {"error": f"약국 정보 조회 중 오류가 발생했습니다: {str(e)}"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -146,6 +160,14 @@ class NearbyPharmacyListAPIView(APIView):
             ref_lon = float(user_profile.longitude)
             radius = float(request.GET.get('radius', 3))  # km 단위
             
+            # 위치 정보 출력
+            print("\n=== Pharmacy Search Location Info ===")
+            print(f"User: {request.user.username}")
+            print(f"Raw location - lat: {user_profile.latitude}, lon: {user_profile.longitude}")
+            print(f"Converted location - lat: {ref_lat}, lon: {ref_lon}")
+            print(f"Search radius: {radius}km")
+            print("===================================\n")
+            
             pharmacies = Pharmacy.objects.annotate(
                 distance=ACos(
                     Cos(Radians(ref_lat)) * 
@@ -156,14 +178,19 @@ class NearbyPharmacyListAPIView(APIView):
                 ) * 6371
             ).filter(distance__lte=radius).order_by('distance')
             
+            # 검색 결과 출력
+            print(f"Found {pharmacies.count()} pharmacies within {radius}km")
+            
             results = []
             for pharmacy in pharmacies:
                 formatted_data = format_pharmacy_data(pharmacy)
                 results.append(formatted_data)
+                print(f"Added pharmacy: {pharmacy.name} at {pharmacy.distance:.1f}km")
             
             return Response(results)
 
         except Exception as e:
+            print(f"Pharmacy search error: {str(e)}")
             return Response(
                 {"error": f"약국 정보 조회 중 오류가 발생했습니다: {str(e)}"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR

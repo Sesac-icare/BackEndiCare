@@ -113,10 +113,10 @@ WSGI_APPLICATION = "icare.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'icare',
-        'USER': 'tester',
-        'PASSWORD': 'test1234',
-        'HOST': 'db',
+        'NAME': 'iCare',
+        'USER': 'root',
+        'PASSWORD': '0728',
+        'HOST': 'localhost',
         'PORT': '3306',
         'OPTIONS': {
             'charset': 'utf8mb4',
@@ -217,3 +217,6 @@ LOGGING = {
         },
     },
 }
+
+# Google Cloud 설정
+GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')

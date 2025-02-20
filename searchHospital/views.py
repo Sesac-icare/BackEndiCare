@@ -254,7 +254,6 @@ class OpenHospitalSearchView(HospitalSearchView):
         return Response({'count': len(results), 'results': results})
 
 
-
 class NearbyHospitalAPIView(APIView):
     """사용자 위치 기반 근처 병원 목록 (상세 정보 포함)"""
     permission_classes = [IsAuthenticated]

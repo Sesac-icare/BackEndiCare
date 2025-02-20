@@ -4,6 +4,14 @@ import xmltodict
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from dotenv import load_dotenv
+import os
+
+# .env 파일 로드
+load_dotenv()
+
+# API 키를 환경 변수에서 가져오기
+service_key = os.getenv('DRUG_API_KEY')
 
 class DrugSearchAPIView(APIView):
     """
@@ -20,19 +28,17 @@ class DrugSearchAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        
-        service_key = ''
         # 공공 데이터 API 엔드포인트
         base_url = "http://apis.data.go.kr/1471000/DrbEasyDrugInfoService/getDrbEasyDrugList"
         
-        # API 요청 파라미터 구성 (검색할 약품명을 itemName 파라미터에 전달)
+        # API 요청 파라미터 구성
         params = {
             "serviceKey": service_key,
             "itemName": drug_name,
             "pageNo": 1,
             "startPage": 1,
             "numOfRows": 10,
-            "_type": "xml"  # XML 응답을 받음
+            "_type": "xml"
         }
         
         try:
@@ -41,22 +47,25 @@ class DrugSearchAPIView(APIView):
             
             # XML 응답을 dict로 파싱
             data_dict = xmltodict.parse(response.text)
-            # 응답 구조: response -> body -> items -> item
-            items = data_dict.get("response", {}).get("body", {}).get("items", {}).get("item", [])
             
-            # 단일 항목일 경우 dict로 반환될 수 있으므로 리스트로 변환
+            # 응답 구조 확인
+            body = data_dict.get("response", {}).get("body", {})
+            
+            # 결과가 없는 경우 체크
+            total_count = int(body.get("totalCount", 0))
+            if total_count == 0:
+                return Response({
+                    "type": "no_results",
+                    "message": f"'{drug_name}'에 해당하는 약 정보가 없습니다.",
+                    "data": []
+                }, status=status.HTTP_200_OK)  # 200 상태코드로 변경
+            
+            # 결과가 있는 경우 처리
+            items = body.get("items", {}).get("item", [])
             if isinstance(items, dict):
                 items = [items]
             
-            if not items:
-                return Response(
-                    {"message": f"'{drug_name}'에 해당하는 데이터가 없습니다."},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            
-            # 원하는 필드만 추출하여 결과 리스트 구성
             results = []
-            # 일단 5개만 출력
             for item in items:
                 extracted = {
                     "itemName": item.get("itemName", "N/A"),
@@ -67,15 +76,24 @@ class DrugSearchAPIView(APIView):
                 }
                 results.append(extracted)
             
-            return Response(results, status=status.HTTP_200_OK)
+            return Response({
+                "type": "success",
+                "message": "약 정보를 찾았습니다.",
+                "data": results
+            }, status=status.HTTP_200_OK)
         
         except requests.exceptions.RequestException as e:
-            return Response(
-                {"error": "API 요청 중 오류 발생", "details": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response({
+                "type": "error",
+                "message": "약 정보 조회 중 오류가 발생했습니다.",
+                "error_details": str(e),
+                "data": []
+            }, status=status.HTTP_200_OK)  # API 오류도 200으로 반환
+        
         except Exception as ex:
-            return Response(
-                {"error": "오류 발생", "details": str(ex)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response({
+                "type": "error",
+                "message": "약 정보 조회 중 오류가 발생했습니다.",
+                "error_details": str(ex),
+                "data": []
+            }, status=status.HTTP_200_OK)  # 일반 오류도 200으로 반환
